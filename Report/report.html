@@ -34,7 +34,7 @@
 <h1 id="tank-battle">Tank Battle</h1>
 <h2 id="%e7%ae%80%e5%8d%95%e7%9a%84%e4%bd%bf%e7%94%a8%e8%af%b4%e6%98%8e">简单的使用说明</h2>
 <ul>
-<li>在<a href="./Game">./Game</a>文件夹中, 有游戏的<code>.exe</code>文件和一个叫做 <em>tank-color.txt</em> 的用来自定义坦克颜色的文件, 其中内容如下:<pre><code class="language-txt"><div>25 202 173 224 96 108
+<li>在<a href="../Game">../Game</a>文件夹中, 有游戏的<code>.exe</code>文件和一个叫做 <em>tank-color.txt</em> 的用来自定义坦克颜色的文件, 其中内容如下:<pre><code class="language-txt"><div>25 202 173 224 96 108
 // 该文件中应该含有6个0-255的数字, 数字间用空格隔开, 依次代表玩家1和玩家2的坦克的RGB颜色
 // 你应该按照文件中已有的格式填写
 // 任何非法的文件内容都会导致自定义颜色失败, 使用默认配色	
@@ -208,6 +208,12 @@
 	<span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Display</span><span class="hljs-params">(Block*)</span></span>;
 };
 </div></code></pre>
+<h2 id="%e6%ba%90%e4%bb%a3%e7%a0%81">源代码</h2>
+<p>代码在<a href="../Source">Source</a>文件夹中<br/>
+由于文件过多在此不作展示
+您也可以在<a href="https://github.com/zxdclyz/TankBattle">github</a>查看代码和体验游戏</p>
+<h2 id="%e6%80%bb%e7%bb%93%e4%b8%8e%e5%8f%8d%e6%80%9d">总结与反思</h2>
+<p>我认为这次的大作业作为学习了面向对象编程之后的总结还是很不错的, 在这个程序中我几乎把本学期学的东西都用了一下. 当然还是有一些遗憾的地方的, 比如因为时间原因没有加入联网对战和人机对战功能, 但是还好程序整体的可扩展性很强. 还有游戏运行中会出现屏闪的问题, 这是使用的界面<code>easyx</code>造成的, 因为它本身只是一个绘图工具, 所以现在的画面是在不停地刷新, 所以有时候刷新速度不稳定会造成屏闪. 其实本来是想选用<code>cscos2d</code>或者<code>unity</code>来做的, 这样花在底层的属性设置和构建物理引擎的时间会大大减少, 或许能给游戏加入更多的内容, 再或者直接用<code>python</code>和<code>pygame</code>来做, 虽然画面效果不会好太多, 但是工作量会大大减少. 但是考虑到这是程设课的作业, 我还是选用了<code>C++</code>来完成, 尽管效果并不令人满足, 也算是对课程的一个总结吧, 以后用<code>C++</code>写面向对象的机会可能不会太多了.</p>
 
     </body>
     </html>
