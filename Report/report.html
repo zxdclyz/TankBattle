@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <title>Tank Battle</title>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+        
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        
+        
+    </head>
+    <body>
+        <center>
+    <font face="仿宋" size=23>
+        小学期自主选题设计说明书
+    </font>
+</center>
+<div style="text-align: right"> 
+    <font size=3.5 face="华文楷体" >
+    无82 李煜泽 2018011060
+    </font>
+</div>
+<h1 id="tank-battle">Tank Battle</h1>
+<h2 id="%e7%ae%80%e5%8d%95%e7%9a%84%e4%bd%bf%e7%94%a8%e8%af%b4%e6%98%8e">简单的使用说明</h2>
+<ul>
+<li>在<a href="./Game">./Game</a>文件夹中, 有游戏的<code>.exe</code>文件和一个叫做 <em>tank-color.txt</em> 的用来自定义坦克颜色的文件, 其中内容如下:<pre><code class="language-txt"><div>25 202 173 224 96 108
+// 该文件中应该含有6个0-255的数字, 数字间用空格隔开, 依次代表玩家1和玩家2的坦克的RGB颜色
+// 你应该按照文件中已有的格式填写
+// 任何非法的文件内容都会导致自定义颜色失败, 使用默认配色	
+</div></code></pre>
+你可以按照上述方式来进行配置</li>
+<li>进入游戏后, 按回车键开始本地的双人对战, 玩家1的操控方式是使用键盘的<code>WASD</code>键移动, <code>J</code>键射击<br/>玩家2的操控方式是使用方向键移动, 小键盘<code>0</code>键射击</li>
+<li>游戏过程中, 可以随时按下<code>Q</code>键来退出, 此时系统将判定血量较多的玩家获胜</li>
+<li>游戏中时间以帧为单位进行, 一秒中大约有15帧左右</li>
+<li>每过150帧(也就是说, 大约10秒)地图上会刷新出一个道具, 道具有五种可能的产生位置, 分别在地图的四角的和正中央. 新的道具刷新时旧的道具会消失, 也就是说场上只会存在一个道具. 道具的剩余刷新帧数在右侧的状态栏会显示, 其下方说明了不同道具的效果</li>
+<li>玩家的初始生命值为10, 速度为5, 子弹威力为1, 冷却为15帧
+数值成长上限为生命值15, 速度13, 子弹威力3, 冷却4帧</li>
+<li>游戏结束后按回车键退出</li>
+</ul>
+<h2 id="%e8%ae%be%e8%ae%a1%e6%80%9d%e8%b7%af%e7%ae%80%e8%bf%b0">设计思路简述</h2>
+<ul>
+<li>这个程序的结构与开题报告中几乎相同, 主要区别是没有实现在报告中写的局域网对战的功能(由于对数据传输延迟的要求较高), 而是通过加入了道具的设定对整体的游戏性和竞技性进行了提升</li>
+<li>这个程序完全由C++编写, 图形界面使用了<a href="https://easyx.cn/">easyx</a>库, 自主编写了简单的基于矩形来判断碰撞的物理引擎</li>
+<li>游戏中所有的碰撞判断基于物体的矩形物理模型, 判断的操作在<code>Rect</code>类中实现, 它作为物体的物理模型是所有物体都有的一个属性</li>
+<li>整个程序除了文件读取操作以外的内容有90%都是面向对象的, 游戏中几乎所有类(除了静态的屏幕类和统计数据类)都是基于一个名为<code>Object</code>的抽象类派生而来的</li>
+<li>程序中函数命名采用大驼峰法, 变量命名用 _ 来连接单词, 编码方式为UTF-8. 程序中仍留有开发人机对战和在线对战的接口</li>
+</ul>
+<h2 id="%e7%a8%8b%e5%ba%8f%e7%bb%93%e6%9e%84%e4%bb%8b%e7%bb%8d">程序结构介绍</h2>
+<p>如上所述, 程序中几乎所有类都是基于一个名为<code>Object</code>的抽象类派生来的, 在此给出各个类的声明并且作简要介绍</p>
+<p>各个类的继承关系如下</p>
+<p><img src="file:///d:\Documents\大一下\程设小学期\TankBattle\Report\class.png" alt="avatar"></p>
+<h3 id="object">Object</h3>
+<p>包含了所有物体一定拥有的属性和方法的抽象类</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">//can be everything</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Object</span> 
+{</span>
+<span class="hljs-keyword">public</span>:
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Display</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">IsExist</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CalPhysicalSize</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Destory</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+
+	Rect physical_size;
+<span class="hljs-keyword">protected</span>:
+	COLORREF color;
+	DIR dir = UP;
+	Point pos;
+	<span class="hljs-keyword">bool</span> existing = <span class="hljs-literal">true</span>;
+}; 
+
+</div></code></pre>
+<h3 id="rect">Rect</h3>
+<p>矩形类, 用于物理碰撞的判断, 利用左上角和右下角的两个点来记录, 其中重载了运算符<code>==</code>来方便方法的调用</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Rect</span>
+{</span>
+<span class="hljs-keyword">public</span>:
+	Rect(Point = { <span class="hljs-number">0</span>,<span class="hljs-number">0</span> }, Point = { <span class="hljs-number">0</span>,<span class="hljs-number">0</span> });
+
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetStartPoint</span><span class="hljs-params">(Point)</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetEndPoint</span><span class="hljs-params">(Point)</span></span>;
+
+	<span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">PointInRect</span><span class="hljs-params">(Point)</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">CollisionCheck</span><span class="hljs-params">(Rect&amp;)</span></span>;
+	<span class="hljs-keyword">bool</span> <span class="hljs-keyword">operator</span> ==(Rect&amp;);
+
+	<span class="hljs-function">Point <span class="hljs-title">GetStartPoint</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function">Point <span class="hljs-title">GetEndPoint</span><span class="hljs-params">()</span></span>;
+<span class="hljs-keyword">protected</span>:
+	Point start_point, end_point;
+};
+</div></code></pre>
+<h3 id="tank">Tank</h3>
+<p>Tank类继承了Object, PlayerTank继承了Tank(此处给AITank留了接口), Tank中包含了一些坦克特有的属性和方法, PlayerTank中主要含有一些面向玩家操作的方法和实现</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">//May have a AITank</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Tank</span>:</span><span class="hljs-keyword">public</span> Object
+{
+	<span class="hljs-keyword">friend</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Item</span>;</span>
+	<span class="hljs-keyword">friend</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Status</span>;</span>
+<span class="hljs-keyword">public</span>:
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Move</span><span class="hljs-params">(DIR)</span> </span>= <span class="hljs-number">0</span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Shoot</span><span class="hljs-params">(<span class="hljs-built_in">std</span>::<span class="hljs-built_in">list</span>&lt;Bullet*&gt;&amp;)</span> </span>= <span class="hljs-number">0</span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CoolDown</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+<span class="hljs-keyword">protected</span>:
+	<span class="hljs-keyword">int</span> hp;
+	<span class="hljs-keyword">int</span> speed;
+	<span class="hljs-keyword">int</span> cool_down_limit;
+	<span class="hljs-keyword">int</span> shoot_cool_down;
+	<span class="hljs-keyword">int</span> super_shoot;
+	<span class="hljs-keyword">int</span> bullet_power;
+};
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PlayerTank</span>:</span><span class="hljs-keyword">public</span> Tank
+{
+<span class="hljs-keyword">public</span>:
+	PlayerTank();
+
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetDir</span><span class="hljs-params">(DIR)</span></span>;
+
+	<span class="hljs-comment">//for initialization</span>
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetColor</span><span class="hljs-params">(COLORREF)</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetPosition</span><span class="hljs-params">(<span class="hljs-keyword">int</span>, <span class="hljs-keyword">int</span>)</span></span>;
+
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Display</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Move</span><span class="hljs-params">(DIR)</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Shoot</span><span class="hljs-params">(<span class="hljs-built_in">std</span>::<span class="hljs-built_in">list</span>&lt;Bullet*&gt;&amp;)</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CoolDown</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Destory</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">DestoryByDamage</span><span class="hljs-params">(<span class="hljs-keyword">int</span>)</span></span>;
+
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CalPhysicalSize</span><span class="hljs-params">()</span></span>;
+
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">IsExist</span><span class="hljs-params">()</span></span>;
+
+	<span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">MoveCheck</span><span class="hljs-params">(DIR)</span></span>;
+
+<span class="hljs-keyword">protected</span>:
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">DrawTank</span><span class="hljs-params">(DIR)</span></span>;
+};
+</div></code></pre>
+<h3 id="bullet">Bullet</h3>
+<p>子弹类, 继承Object, 由坦克调用射击方法创建, 额外有速度和伤害属性, 作为Tank的友元类方便命中时的操作</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Bullet</span> :</span><span class="hljs-keyword">public</span> Object
+{
+<span class="hljs-keyword">public</span>:
+	Bullet(Point, DIR, COLORREF, <span class="hljs-keyword">int</span>);
+
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Display</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Move</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">IsExist</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Destory</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">CalPhysicalSize</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">GetDamage</span><span class="hljs-params">()</span></span>;
+
+<span class="hljs-keyword">protected</span>:
+	<span class="hljs-keyword">int</span> speed;
+	<span class="hljs-keyword">int</span> damage;
+};
+</div></code></pre>
+<h3 id="item">Item</h3>
+<p>道具类, 继承Object, 有生成随机位置和效果的方法, 通过调用部署和激活两个方法来使用</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Item</span> :</span><span class="hljs-keyword">public</span> Object
+{
+<span class="hljs-keyword">public</span>:
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Deploy</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetRandomPos</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetRandomFunc</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Activate</span><span class="hljs-params">(PlayerTank&amp;)</span></span>;
+
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Display</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">IsExist</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CalPhysicalSize</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Destory</span><span class="hljs-params">()</span></span>;
+<span class="hljs-keyword">protected</span>:
+	Func func;
+};
+</div></code></pre>
+<h3 id="map">Map</h3>
+<p>Map本身只含有静态方法(因为只有一张地图), 在调用<code>Create</code>方法时会按照预设创建一些Block对象, 放入需要判断物理碰撞的链表中, 然后每帧调用显示方法<br/>Block继承Object</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Block</span> :</span><span class="hljs-keyword">public</span> Object
+{
+<span class="hljs-keyword">public</span>:
+	Block();
+	Block(COLORREF,Point,Point);
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Display</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">IsExist</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CalPhysicalSize</span><span class="hljs-params">()</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Destory</span><span class="hljs-params">()</span></span>;
+
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetPosition</span><span class="hljs-params">(Point, Point)</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SetColor</span><span class="hljs-params">(COLORREF)</span></span>;
+};
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Map</span>
+{</span>
+<span class="hljs-keyword">public</span>:
+	<span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Create</span><span class="hljs-params">(Block*)</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Display</span><span class="hljs-params">(Block*)</span></span>;
+};
+</div></code></pre>
+
+    </body>
+    </html>
